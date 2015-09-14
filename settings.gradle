@@ -1,1 +1,1 @@
-include ':app'
+include ':app', ':proj4j-0.1.0'

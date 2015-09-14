@@ -5,8 +5,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
@@ -29,8 +27,8 @@ public class MainActivity extends AppCompatActivity {
 
         mLocationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
-                 String message = String.format("%f \n %f", location.getLatitude(), location.getLongitude());
-                 MainActivity.this.setLocationMessage(message);
+                GridID gridID = GridID.fromLocation(location);
+                MainActivity.this.setLocationMessage(gridID.toString());
             }
 
             @Override
