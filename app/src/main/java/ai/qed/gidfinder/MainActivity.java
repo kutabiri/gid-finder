@@ -7,6 +7,7 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -35,6 +36,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageView marker;
     private RelativeLayout parentView;
     private int perUnitPixel;
+    private String currentGID = "";
+    private MediaPlayer pingSound;
 
     // record the compass picture angle turned
     private float currentDegree = 0f;
@@ -52,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_main);
+
+        pingSound = MediaPlayer.create(this, R.raw.ping);
 
         mLocationView = (TextView) findViewById(R.id.coordinates);
         cell1 = (TextView) findViewById(R.id.cell_1);
@@ -155,10 +160,17 @@ public class MainActivity extends AppCompatActivity {
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mLocationView.setText(message);
+                if (message != null && !message.equals(currentGID)) {
 
-                setCells(subcell);
-                positionMarker(subcell);
+                    currentGID = message;
+                    
+                    pingSound.start();
+
+                    mLocationView.setText(message);
+
+                    setCells(subcell);
+                    positionMarker(subcell);
+                }
             }
         });
     }
