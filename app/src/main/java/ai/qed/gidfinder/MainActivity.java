@@ -148,6 +148,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void stopTracking() {
         mLocationManager.removeUpdates(mLocationListener);
+        mSensorManager.unregisterListener(mSensorEventListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION));
     }
 
     private void setLocationMessage(final String message, final int subcell) {
