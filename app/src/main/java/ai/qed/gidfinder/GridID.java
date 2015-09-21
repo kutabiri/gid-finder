@@ -86,6 +86,10 @@ public class GridID {
     public String toString() {
         String eastingString = formatCoordinate(eastingNegative, easting, "E", "W");
         String northingString = formatCoordinate(northingNegative, northing, "N", "S");
-        return String.format("GID=%s-%s-%d\n", eastingString, northingString, index);
+        return String.format("%s-%s-%d\n", eastingString, northingString, index);
+    }
+
+    public int getSubcell() {
+        return index;
     }
  }

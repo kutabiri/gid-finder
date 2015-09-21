@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">GIDFinder</string>
-    <string name="initial_message">Searching for location...</string>
+    <string name="initial_message">Searching…</string>
+    <string name="gid">GID</string>
 </resources>
