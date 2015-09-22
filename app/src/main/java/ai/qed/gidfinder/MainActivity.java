@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private int perUnitPixel;
     private String currentGID = "";
     private MediaPlayer pingSound;
+    private ImageView compass;
 
     // record the compass picture angle turned
     private float currentDegree = 0f;
@@ -71,11 +72,12 @@ public class MainActivity extends AppCompatActivity {
         marker = (ImageView) findViewById(R.id.marker);
         parentView = (RelativeLayout) findViewById(R.id.parent_view);
         perUnitPixel = (int) getResources().getDimension(R.dimen.per_unit_dp);
+        compass = (ImageView) findViewById(R.id.compass);
 
         mLocationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 GridID gridID = GridID.fromLocation(location);
-                MainActivity.this.setLocationMessage(gridID.toString(), gridID.getSubcell());
+                MainActivity.this.setLocationMessage(gridID);
             }
 
             @Override
@@ -105,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
                         currentDegree,
                         -degree,
                         Animation.RELATIVE_TO_SELF, 0.5f,
-                        Animation.RELATIVE_TO_SELF, 0.75f);
+                        Animation.RELATIVE_TO_SELF, 0.5f);
 
                 // how long the animation will take place
                 ra.setDuration(100);
@@ -114,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
                 ra.setFillAfter(true);
 
                 // Start the animation
-                marker.startAnimation(ra);
+                compass.startAnimation(ra);
                 currentDegree = -degree;
 
             }
@@ -156,10 +158,11 @@ public class MainActivity extends AppCompatActivity {
         mSensorManager.unregisterListener(mSensorEventListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION));
     }
 
-    private void setLocationMessage(final String message, final int subcell) {
+    private void setLocationMessage(final GridID gridId) {
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                String message = gridId.toString();
                 if (message != null && !message.equals(currentGID)) {
 
                     currentGID = message;
@@ -168,18 +171,20 @@ public class MainActivity extends AppCompatActivity {
 
                     mLocationView.setText(message);
 
-                    setCells(subcell);
-                    positionMarker(subcell);
+                    setCells(gridId.getSubcell());
                 }
+
+                positionMarker(gridId);
             }
         });
     }
 
-    private void positionMarker(int subcell) {
+    private void positionMarker(GridID gridID) {
         marker.setVisibility(View.VISIBLE);
         parentView.removeView(marker);
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) marker.getLayoutParams();
-        params.setMargins((subcell / 10) * perUnitPixel, (9 - (subcell % 10)) * perUnitPixel - (int) (params.height * 0.65), 0, 0);
+        params.setMargins(gridID.getXOffset() * perUnitPixel, (100-gridID.getYOffset()) * perUnitPixel - (params.height / 2), 0, 0);
+//        params.setMargins((subcell / 10) * perUnitPixel, (9 - (subcell % 10)) * perUnitPixel - (int) (params.height * 0.65), 0, 0);
         parentView.addView(marker, params);
     }
 

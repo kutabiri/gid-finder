@@ -14,15 +14,6 @@
         android:orientation="vertical">
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textColor="@color/font_color"
-            android:textStyle="bold"
-            android:textSize="35sp"
-            android:gravity="center"
-            android:text="@string/gid" />
-
-        <TextView
             android:id="@+id/coordinates"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -39,7 +30,7 @@
         android:id="@+id/map_section"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:src="@drawable/compass_bg"
         android:layout_below="@id/gid_section"
         android:layout_centerHorizontal="true"
@@ -48,11 +39,33 @@
     <ImageView
         android:id="@+id/marker"
         android:layout_width="20dp"
-        android:layout_height="80dp"
+        android:layout_height="20dp"
         android:src="@drawable/marker"
         android:layout_alignTop="@id/map_section"
         android:layout_alignLeft="@id/map_section"
         android:visibility="gone"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/map_section"
+        android:layout_alignTop="@id/map_section"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/compass"
+            android:textColor="@color/font_color"
+            android:textSize="12sp"
+            android:gravity="center"/>
+
+        <ImageView
+            android:id="@+id/compass"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:src="@drawable/compass"/>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

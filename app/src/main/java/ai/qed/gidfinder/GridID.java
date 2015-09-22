@@ -17,18 +17,22 @@ public class GridID {
     private boolean northingNegative;
     private int northing;
     private int index;
+    private int xOffset;
+    private int yOffset;
 
     private static final String standardProjectionString =
             "+title=long/lat:WGS84 +proj=longlat +ellps=WGS84 +datum=WGS84 +units=degrees";
     private static final String lambertProjectionString =
             "+proj=laea +ellps=WGS84 +lon_0=20 +lat_0=5 +units=m +no_defs";
 
-    public GridID(boolean eastingNegative, int easting, boolean northingNegative, int northing, int index) {
+    public GridID(boolean eastingNegative, int easting, boolean northingNegative, int northing, int index, double x, double y) {
         this.eastingNegative = eastingNegative;
         this.easting = easting;
         this.northingNegative = northingNegative;
         this.northing = northing;
         this.index = index;
+        this.xOffset = intfloor(x % 100);
+        this.yOffset = intfloor(y % 100);
     }
 
     private static int intfloor(double x) {
@@ -52,10 +56,12 @@ public class GridID {
         boolean eastingNegative = lambert.getLongitude() < 0;
         boolean northingNegative = lambert.getLatitude() < 0;
 
-        int cellID = calculateCellID(
-                floorMod(lambert.getLongitude(), 1000), floorMod(lambert.getLatitude(), 1000));
+        double x = floorMod(lambert.getLongitude(), 1000);
+        double y = floorMod(lambert.getLatitude(), 1000);
 
-        return new GridID(eastingNegative, easting, northingNegative, northing, cellID); 
+        int cellID = calculateCellID(x, y);
+
+        return new GridID(eastingNegative, easting, northingNegative, northing, cellID, x, y);
     }
 
     private static Location convertToLambert(Location location) {
@@ -86,10 +92,18 @@ public class GridID {
     public String toString() {
         String eastingString = formatCoordinate(eastingNegative, easting, "E", "W");
         String northingString = formatCoordinate(northingNegative, northing, "N", "S");
-        return String.format("%s-%s-%d\n", eastingString, northingString, index);
+        return String.format("GID\n%s-%s-%d\n", eastingString, northingString, index);
     }
 
     public int getSubcell() {
         return index;
+    }
+
+    public int getXOffset() {
+        return xOffset;
+    }
+
+    public int getYOffset() {
+        return yOffset;
     }
  }
