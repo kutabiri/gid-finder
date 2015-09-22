@@ -134,6 +134,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startTracking() {
+        // for the system's orientation sensor registered listeners
+        mSensorManager.registerListener(mSensorEventListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
+                SensorManager.SENSOR_DELAY_GAME);
+        
         if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             mLocationManager.requestLocationUpdates(
                     LocationManager.GPS_PROVIDER,
@@ -145,9 +149,6 @@ public class MainActivity extends AppCompatActivity {
                 mLocationListener.onLocationChanged(latestLocation);
             }
 
-            // for the system's orientation sensor registered listeners
-            mSensorManager.registerListener(mSensorEventListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
-                    SensorManager.SENSOR_DELAY_GAME);
         } else {
             // TODO
         }
