@@ -87,12 +87,22 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onProviderEnabled(String provider) {
-
+                mLocationView.setText(getString(R.string.initial_message));
             }
 
             @Override
             public void onProviderDisabled(String provider) {
-
+                mLocationView.setText(getString(R.string.please_turn_on_gps));
+                marker.setVisibility(View.GONE);
+                cell1.setText(null);
+                cell2.setText(null);
+                cell3.setText(null);
+                cell4.setText(null);
+                cell5.setText(null);
+                cell6.setText(null);
+                cell7.setText(null);
+                cell8.setText(null);
+                cell9.setText(null);
             }
         };
 
@@ -137,20 +147,19 @@ public class MainActivity extends AppCompatActivity {
         // for the system's orientation sensor registered listeners
         mSensorManager.registerListener(mSensorEventListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
                 SensorManager.SENSOR_DELAY_GAME);
-        
-        if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            mLocationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    MIN_TIME_BW_UPDATES,
-                    MIN_DISTANCE_CHANGE_FOR_UPDATES,
-                    mLocationListener);
-            Location latestLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if(latestLocation != null) {
-                mLocationListener.onLocationChanged(latestLocation);
-            }
 
-        } else {
-            // TODO
+        mLocationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER,
+                MIN_TIME_BW_UPDATES,
+                MIN_DISTANCE_CHANGE_FOR_UPDATES,
+                mLocationListener);
+        Location latestLocation = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (latestLocation != null) {
+            mLocationListener.onLocationChanged(latestLocation);
+        }
+
+        if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            mLocationView.setText(getString(R.string.please_turn_on_gps));
         }
     }
 

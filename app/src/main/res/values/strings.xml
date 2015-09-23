@@ -3,4 +3,5 @@
     <string name="initial_message">Searching for location…</string>
     <string name="gid">GID</string>
     <string name="compass">Compass</string>
+    <string name="please_turn_on_gps">Please enable GPS</string>
 </resources>
