@@ -21,7 +21,8 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity {
     private LocationManager mLocationManager;
     private LocationListener mLocationListener;
-    private TextView mLocationView;
+    private TextView gidTextView;
+    private TextView latlonTextView;
     private TextView cell1;
     private TextView cell2;
     private TextView cell3;
@@ -59,7 +60,8 @@ public class MainActivity extends AppCompatActivity {
 
         pingSound = MediaPlayer.create(this, R.raw.ping);
 
-        mLocationView = (TextView) findViewById(R.id.coordinates);
+        gidTextView = (TextView) findViewById(R.id.coordinates);
+        latlonTextView = (TextView) findViewById(R.id.latlon);
         cell1 = (TextView) findViewById(R.id.cell_1);
         cell2 = (TextView) findViewById(R.id.cell_2);
         cell3 = (TextView) findViewById(R.id.cell_3);
@@ -87,12 +89,13 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onProviderEnabled(String provider) {
-                mLocationView.setText(getString(R.string.initial_message));
+                gidTextView.setText(getString(R.string.initial_message));
             }
 
             @Override
             public void onProviderDisabled(String provider) {
-                mLocationView.setText(getString(R.string.please_turn_on_gps));
+                gidTextView.setText(getString(R.string.please_turn_on_gps));
+                latlonTextView.setVisibility(View.GONE);
                 marker.setVisibility(View.GONE);
                 cell1.setText(null);
                 cell2.setText(null);
@@ -159,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (!mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            mLocationView.setText(getString(R.string.please_turn_on_gps));
+            gidTextView.setText(getString(R.string.please_turn_on_gps));
         }
     }
 
@@ -172,14 +175,18 @@ public class MainActivity extends AppCompatActivity {
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                String message = gridId.toString();
+                String latlon = gridId.toLatLonString();
+                latlonTextView.setVisibility(View.VISIBLE);
+                latlonTextView.setText(latlon);
+
+                String message = gridId.toGIDString();
                 if (message != null && !message.equals(currentGID)) {
 
                     currentGID = message;
                     
                     pingSound.start();
 
-                    mLocationView.setText(message);
+                    gidTextView.setText(message);
 
                     setCells(gridId.getSubcell());
                 }
