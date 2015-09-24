@@ -4,4 +4,6 @@
     <string name="gid">GID</string>
     <string name="compass">Compass</string>
     <string name="please_turn_on_gps">Please enable GPS</string>
+    <string name="ping_on">Ping On</string>
+    <string name="ping_off">Ping Off</string>
 </resources>

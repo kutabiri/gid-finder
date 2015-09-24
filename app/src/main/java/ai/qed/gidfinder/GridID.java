@@ -35,8 +35,8 @@ public class GridID {
         this.index = index;
         this.xOffset = intfloor(x % 100);
         this.yOffset = intfloor(y % 100);
-        this.latitude = latitude;
-        this.longitude = longitude;
+        this.latitude = Math.round(latitude * 1000000.00) / 1000000.00;
+        this.longitude = Math.round(longitude * 1000000.00) / 1000000.00;
     }
 
     private static int intfloor(double x) {

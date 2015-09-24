@@ -1,0 +1,3 @@
+<resources>
+    <string name="pref_key_sound">sound_preference</string>
+</resources>

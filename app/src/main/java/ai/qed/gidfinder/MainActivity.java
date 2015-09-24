@@ -1,5 +1,6 @@
 package ai.qed.gidfinder;
 
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -9,7 +10,10 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.Animation;
@@ -40,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private String currentGID = "";
     private MediaPlayer pingSound;
     private ImageView compass;
+    private SharedPreferences preferences;
 
     // record the compass picture angle turned
     private float currentDegree = 0f;
@@ -57,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.activity_main);
+
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         pingSound = MediaPlayer.create(this, R.raw.ping);
 
@@ -147,6 +154,46 @@ public class MainActivity extends AppCompatActivity {
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+
+        boolean pingOn = preferences.getBoolean(getString(R.string.pref_key_sound), true);
+        MenuItem ping = menu.findItem(R.id.ping);
+
+        if (pingOn) {
+            ping.setChecked(true);
+            ping.setTitle(getString(R.string.ping_on));
+        }
+        else {
+            ping.setChecked(false);
+            ping.setTitle(getString(R.string.ping_off));
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.ping:
+                boolean pingOn = preferences.getBoolean(getString(R.string.pref_key_sound), true);
+
+                if (!pingOn) {
+                    item.setChecked(true);
+                    item.setTitle(getString(R.string.ping_on));
+                }
+                else {
+                    item.setChecked(false);
+                    item.setTitle(getString(R.string.ping_off));
+                }
+                preferences.edit().putBoolean(getString(R.string.pref_key_sound), !pingOn).apply();
+
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
     private void startTracking() {
         // for the system's orientation sensor registered listeners
         mSensorManager.registerListener(mSensorEventListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
@@ -184,8 +231,10 @@ public class MainActivity extends AppCompatActivity {
                 if (message != null && !message.equals(currentGID)) {
 
                     currentGID = message;
-                    
-                    pingSound.start();
+
+                    if (preferences.getBoolean(getString(R.string.pref_key_sound), true)) {
+                        pingSound.start();
+                    }
 
                     gidTextView.setText(message);
 
