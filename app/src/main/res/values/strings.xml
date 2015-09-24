@@ -6,4 +6,6 @@
     <string name="please_turn_on_gps">Please enable GPS</string>
     <string name="ping_on">Ping On</string>
     <string name="ping_off">Ping Off</string>
+    <string name="zoom_in">Zoom In</string>
+    <string name="zoom_out">Zoom Out</string>
 </resources>

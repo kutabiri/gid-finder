@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -41,10 +42,14 @@ public class MainActivity extends AppCompatActivity {
     private ImageView marker;
     private RelativeLayout parentView;
     private int perUnitPixel;
-    private String currentGID = "";
+    private int subcellPerUnitPixel;
+    private GridID currentGID = null;
     private MediaPlayer pingSound;
     private ImageView compass;
     private SharedPreferences preferences;
+    private Button zoomButton;
+
+    private boolean zoomedIn = true;
 
     // record the compass picture angle turned
     private float currentDegree = 0f;
@@ -81,7 +86,27 @@ public class MainActivity extends AppCompatActivity {
         marker = (ImageView) findViewById(R.id.marker);
         parentView = (RelativeLayout) findViewById(R.id.parent_view);
         perUnitPixel = (int) getResources().getDimension(R.dimen.per_unit_dp);
+        subcellPerUnitPixel = (int) getResources().getDimension(R.dimen.subcell_per_unit_dp);
         compass = (ImageView) findViewById(R.id.compass);
+        zoomButton = (Button) findViewById(R.id.map_toggle);
+
+        zoomButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (zoomedIn) {
+                    zoomedIn = false;
+                    ((ImageView) findViewById(R.id.map_section)).setImageResource(R.drawable.grid_map);
+                    zoomButton.setText(getString(R.string.zoom_in));
+                    positionMarker(currentGID);
+                }
+                else {
+                    zoomedIn = true;
+                    ((ImageView) findViewById(R.id.map_section)).setImageResource(R.drawable.compass_bg);
+                    zoomButton.setText(getString(R.string.zoom_out));
+                    positionMarker(currentGID);
+                }
+            }
+        });
 
         mLocationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
@@ -223,24 +248,24 @@ public class MainActivity extends AppCompatActivity {
         this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                String latlon = gridId.toLatLonString();
-                latlonTextView.setVisibility(View.VISIBLE);
-                latlonTextView.setText(latlon);
 
-                String message = gridId.toGIDString();
-                if (message != null && !message.equals(currentGID)) {
-
-                    currentGID = message;
+                // only need to ping and update gid when it changed
+                if (gridId != null && (currentGID == null || !gridId.toGIDString().equals(currentGID.toGIDString()))) {
 
                     if (preferences.getBoolean(getString(R.string.pref_key_sound), true)) {
                         pingSound.start();
                     }
 
-                    gidTextView.setText(message);
+                    gidTextView.setText(gridId.toGIDString());
 
                     setCells(gridId.getSubcell());
                 }
 
+                String latlon = gridId.toLatLonString();
+                latlonTextView.setVisibility(View.VISIBLE);
+                latlonTextView.setText(latlon);
+
+                currentGID = gridId;
                 positionMarker(gridId);
             }
         });
@@ -250,8 +275,13 @@ public class MainActivity extends AppCompatActivity {
         marker.setVisibility(View.VISIBLE);
         parentView.removeView(marker);
         RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) marker.getLayoutParams();
-        params.setMargins(gridID.getXOffset() * perUnitPixel, (100-gridID.getYOffset()) * perUnitPixel - (params.height / 2), 0, 0);
-//        params.setMargins((subcell / 10) * perUnitPixel, (9 - (subcell % 10)) * perUnitPixel - (int) (params.height * 0.65), 0, 0);
+
+        if (zoomedIn) {
+            params.setMargins(gridID.getXOffset() * subcellPerUnitPixel, (100 - gridID.getYOffset()) * subcellPerUnitPixel - (params.height / 2), 0, 0);
+        }
+        else {
+            params.setMargins((gridID.getSubcell() / 10) * perUnitPixel, (9 - (gridID.getSubcell() % 10)) * perUnitPixel, 0, 0);
+        }
         parentView.addView(marker, params);
     }
 
