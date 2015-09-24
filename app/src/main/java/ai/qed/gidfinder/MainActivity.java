@@ -95,6 +95,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onProviderDisabled(String provider) {
                 gidTextView.setText(getString(R.string.please_turn_on_gps));
+                currentGID = null;
                 latlonTextView.setVisibility(View.GONE);
                 marker.setVisibility(View.GONE);
                 cell1.setText(null);
