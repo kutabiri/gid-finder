@@ -242,10 +242,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void updateZoomButtons() {
-        parentView.removeView(marker);
+    private void updateMapGrid() {
         if (zoomLevel == 1) {
-            zoomInButton.setEnabled(false);
             mapGrid.setVisibility(View.GONE);
             singleGrid.setVisibility(View.VISIBLE);
             ((TextView) singleGrid.findViewById(R.id.cell_number)).setText(Integer.toString(currentGID.getSubcell()));
@@ -256,29 +254,43 @@ public class MainActivity extends AppCompatActivity {
             singleGrid.setVisibility(View.GONE);
 
             if (zoomLevel == 3) {
-                zoomOutButton.setEnabled(false);
                 mapGrid.setNumColumns(10);
                 list = largeGridArray;
             } else {
                 list = getCellList(currentGID.getSubcell());
-                zoomInButton.setEnabled(true);
-                zoomOutButton.setEnabled(true);
                 mapGrid.setNumColumns(3);
             }
 
             mapGrid.setAdapter(new GridAdapter<>(this, list, zoomLevel, Integer.toString(currentGID.getSubcell())));
         }
 
-        refreshMarker();
-    }
-
-    private void refreshMarker() {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 positionMarker(currentGID);
             }
         }, 500);
+    }
+
+    private void updateZoomButtons() {
+        parentView.removeView(marker);
+        if (zoomLevel == 1) {
+            zoomInButton.setEnabled(false);
+        }
+        else {
+            mapGrid.setVisibility(View.VISIBLE);
+            singleGrid.setVisibility(View.GONE);
+
+            if (zoomLevel == 3) {
+                zoomOutButton.setEnabled(false);
+            } else {
+                zoomInButton.setEnabled(true);
+                zoomOutButton.setEnabled(true);
+            }
+
+        }
+
+        updateMapGrid();
     }
 
     private void startTracking() {
@@ -329,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
                 longTextView.setText(gridId.getLongString());
 
                 currentGID = gridId;
-                refreshMarker();
+                updateMapGrid();
             }
         });
     }
