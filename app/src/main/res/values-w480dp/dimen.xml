@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="grid_height">440dp</dimen>
+    <dimen name="medium_grid_size">146dp</dimen>
+    <dimen name="large_grid_size">44dp</dimen>
+    <dimen name="marker_width">27dp</dimen>
+</resources>

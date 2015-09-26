@@ -98,8 +98,12 @@ public class GridID {
         return String.format("GID\n%s-%s-%d", eastingString, northingString, index);
     }
 
-    public String toLatLonString() {
-        return String.format("Lat/Lon\n%s\n%s", Double.toString(latitude), Double.toString(longitude));
+    public String getLatString() {
+        return Double.toString(latitude);
+    }
+
+    public String getLongString() {
+        return Double.toString(longitude);
     }
 
     public int getSubcell() {

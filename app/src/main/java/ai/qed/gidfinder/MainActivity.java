@@ -9,25 +9,33 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private LocationManager mLocationManager;
     private LocationListener mLocationListener;
     private TextView gidTextView;
-    private TextView latlonTextView;
+    private TextView latTextView;
+    private TextView longTextView;
     private TextView cell1;
     private TextView cell2;
     private TextView cell3;
@@ -39,17 +47,19 @@ public class MainActivity extends AppCompatActivity {
     private TextView cell9;
     private SensorManager mSensorManager;
     private SensorEventListener mSensorEventListener;
-    private ImageView marker;
+    private View marker;
     private RelativeLayout parentView;
-    private int perUnitPixel;
-    private int subcellPerUnitPixel;
     private GridID currentGID = null;
     private MediaPlayer pingSound;
     private ImageView compass;
     private SharedPreferences preferences;
-    private Button zoomButton;
-
-    private boolean zoomedIn = true;
+    private Button zoomInButton;
+    private Button zoomOutButton;
+    private CheckBox pingToggle;
+    private GridView mapGrid;
+    private View singleGrid;
+    private int zoomLevel = 1;
+    private Handler handler;
 
     // record the compass picture angle turned
     private float currentDegree = 0f;
@@ -60,6 +70,16 @@ public class MainActivity extends AppCompatActivity {
     // The minimum time between updates in milliseconds
     private static final long MIN_TIME_BW_UPDATES = 0 * 1000 * 60 * 1; // 1 minute
 
+    private static final List<String> largeGridArray = new ArrayList<>();
+
+    static {
+        for (int i = 0; i < 10; i ++) {
+            for (int j = 0; j < 10; j++) {
+                largeGridArray.add(i * 10 + j, Integer.toString(j * 10 + 9 - i));
+            }
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) throws SecurityException {
         super.onCreate(savedInstanceState);
@@ -68,12 +88,21 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        getSupportActionBar().hide();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(getResources().getColor(R.color.status_bar_color));
+        }
+
         preferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         pingSound = MediaPlayer.create(this, R.raw.ping);
-
+        handler = new Handler(getMainLooper());
         gidTextView = (TextView) findViewById(R.id.coordinates);
-        latlonTextView = (TextView) findViewById(R.id.latlon);
+        latTextView = (TextView) findViewById(R.id.latitude);
+        longTextView = (TextView) findViewById(R.id.longitude);
         cell1 = (TextView) findViewById(R.id.cell_1);
         cell2 = (TextView) findViewById(R.id.cell_2);
         cell3 = (TextView) findViewById(R.id.cell_3);
@@ -83,27 +112,58 @@ public class MainActivity extends AppCompatActivity {
         cell7 = (TextView) findViewById(R.id.cell_7);
         cell8 = (TextView) findViewById(R.id.cell_8);
         cell9 = (TextView) findViewById(R.id.cell_9);
-        marker = (ImageView) findViewById(R.id.marker);
+        marker = getLayoutInflater().inflate(R.layout.marker, null);
         parentView = (RelativeLayout) findViewById(R.id.parent_view);
-        perUnitPixel = (int) getResources().getDimension(R.dimen.per_unit_dp);
-        subcellPerUnitPixel = (int) getResources().getDimension(R.dimen.subcell_per_unit_dp);
         compass = (ImageView) findViewById(R.id.compass);
-        zoomButton = (Button) findViewById(R.id.map_toggle);
+        pingToggle = (CheckBox) findViewById(R.id.ping_toggle);
+        mapGrid = (GridView) findViewById(R.id.map_section);
+        singleGrid = findViewById(R.id.small_grid);
 
-        zoomButton.setOnClickListener(new View.OnClickListener() {
+        boolean pingOn = preferences.getBoolean(getString(R.string.pref_key_sound), true);
+
+        if (pingOn) {
+            pingToggle.setChecked(true);
+            pingToggle.setText(R.string.ping_on);
+        }
+        else {
+            pingToggle.setChecked(false);
+            pingToggle.setText(R.string.ping_off);
+        }
+
+        pingToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
-                if (zoomedIn) {
-                    zoomedIn = false;
-                    ((ImageView) findViewById(R.id.map_section)).setImageResource(R.drawable.grid_map);
-                    zoomButton.setText(getString(R.string.zoom_in));
-                    positionMarker(currentGID);
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    pingToggle.setText(R.string.ping_on);
                 }
                 else {
-                    zoomedIn = true;
-                    ((ImageView) findViewById(R.id.map_section)).setImageResource(R.drawable.compass_bg);
-                    zoomButton.setText(getString(R.string.zoom_out));
-                    positionMarker(currentGID);
+                    pingToggle.setText(R.string.ping_off);
+                }
+                preferences.edit().putBoolean(getString(R.string.pref_key_sound), isChecked).apply();
+            }
+        });
+
+        zoomInButton = (Button) findViewById(R.id.zoom_in_btn);
+        zoomOutButton = (Button) findViewById(R.id.zoom_out_btn);
+
+        zoomInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (currentGID != null) {
+                    zoomLevel--;
+
+                    updateZoomButtons();
+                }
+            }
+        });
+
+        zoomOutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (currentGID != null) {
+                    zoomLevel++;
+
+                    updateZoomButtons();
                 }
             }
         });
@@ -126,10 +186,12 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onProviderDisabled(String provider) {
+                handler.removeCallbacksAndMessages(null);
                 gidTextView.setText(getString(R.string.please_turn_on_gps));
                 currentGID = null;
-                latlonTextView.setVisibility(View.GONE);
-                marker.setVisibility(View.GONE);
+                latTextView.setText(null);
+                longTextView.setText(null);
+                parentView.removeView(marker);
                 cell1.setText(null);
                 cell2.setText(null);
                 cell3.setText(null);
@@ -177,46 +239,46 @@ public class MainActivity extends AppCompatActivity {
 
         // initialize your android device sensor capabilities
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-
-        boolean pingOn = preferences.getBoolean(getString(R.string.pref_key_sound), true);
-        MenuItem ping = menu.findItem(R.id.ping);
-
-        if (pingOn) {
-            ping.setChecked(true);
-            ping.setTitle(getString(R.string.ping_on));
+    private void updateZoomButtons() {
+        parentView.removeView(marker);
+        if (zoomLevel == 1) {
+            zoomInButton.setEnabled(false);
+            mapGrid.setVisibility(View.GONE);
+            singleGrid.setVisibility(View.VISIBLE);
+            ((TextView) singleGrid.findViewById(R.id.cell_number)).setText(Integer.toString(currentGID.getSubcell()));
         }
         else {
-            ping.setChecked(false);
-            ping.setTitle(getString(R.string.ping_off));
+            List<String> list;
+            mapGrid.setVisibility(View.VISIBLE);
+            singleGrid.setVisibility(View.GONE);
+
+            if (zoomLevel == 3) {
+                zoomOutButton.setEnabled(false);
+                mapGrid.setNumColumns(10);
+                list = largeGridArray;
+            } else {
+                list = getCellList(currentGID.getSubcell());
+                zoomInButton.setEnabled(true);
+                zoomOutButton.setEnabled(true);
+                mapGrid.setNumColumns(3);
+            }
+
+            mapGrid.setAdapter(new GridAdapter<>(this, list, zoomLevel, Integer.toString(currentGID.getSubcell())));
         }
-        return true;
+
+        refreshMarker();
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.ping:
-                boolean pingOn = preferences.getBoolean(getString(R.string.pref_key_sound), true);
-
-                if (!pingOn) {
-                    item.setChecked(true);
-                    item.setTitle(getString(R.string.ping_on));
-                }
-                else {
-                    item.setChecked(false);
-                    item.setTitle(getString(R.string.ping_off));
-                }
-                preferences.edit().putBoolean(getString(R.string.pref_key_sound), !pingOn).apply();
-
-                return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+    private void refreshMarker() {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                positionMarker(currentGID);
+            }
+        }, 500);
     }
 
     private void startTracking() {
@@ -258,149 +320,165 @@ public class MainActivity extends AppCompatActivity {
 
                     gidTextView.setText(gridId.toGIDString());
 
-                    setCells(gridId.getSubcell());
+                    if (zoomLevel == 1) {
+                        ((TextView) singleGrid.findViewById(R.id.cell_number)).setText(Integer.toString(gridId.getSubcell()));
+                    }
                 }
 
-                String latlon = gridId.toLatLonString();
-                latlonTextView.setVisibility(View.VISIBLE);
-                latlonTextView.setText(latlon);
+                latTextView.setText(gridId.getLatString());
+                longTextView.setText(gridId.getLongString());
 
                 currentGID = gridId;
-                positionMarker(gridId);
+                refreshMarker();
             }
         });
     }
 
     private void positionMarker(GridID gridID) {
-        marker.setVisibility(View.VISIBLE);
         parentView.removeView(marker);
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) marker.getLayoutParams();
+        int markerSize = (int) getResources().getDimension(R.dimen.marker_width);
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(markerSize, markerSize);
 
-        if (zoomedIn) {
-            params.setMargins(gridID.getXOffset() * subcellPerUnitPixel, (100 - gridID.getYOffset()) * subcellPerUnitPixel - (params.height / 2), 0, 0);
+        int leftMargin;
+        int topMargin;
+        if (zoomLevel == 1) {
+            leftMargin = gridID.getXOffset() * singleGrid.getWidth() / 100 - (markerSize / 2) + singleGrid.getLeft();
+            topMargin = (100 - gridID.getYOffset()) * singleGrid.getHeight() / 100 - (markerSize / 2) + singleGrid.getTop();
         }
         else {
-            params.setMargins((gridID.getSubcell() / 10) * perUnitPixel, (9 - (gridID.getSubcell() % 10)) * perUnitPixel, 0, 0);
+            View view = null;
+            for (int i = 0; i < mapGrid.getCount(); i++) {
+                String item = (String) mapGrid.getAdapter().getItem(i);
+                if (item.equals(Integer.toString(currentGID.getSubcell()))) {
+                    view = mapGrid.getChildAt(i);
+                    break;
+                }
+            }
+
+            if (zoomLevel == 2) {
+                leftMargin = gridID.getXOffset() * view.getWidth() / 100 - (markerSize / 2) + view.getLeft() + mapGrid.getLeft();
+                topMargin = (100 - gridID.getYOffset()) * view.getHeight() / 100 - (markerSize / 2) + view.getTop() + mapGrid.getTop();
+            } else {
+                leftMargin = view.getWidth() / 2 - (markerSize / 2) + view.getLeft() + mapGrid.getLeft();
+                topMargin = view.getHeight() / 2 - (markerSize / 2) + view.getTop() + mapGrid.getTop();
+            }
         }
-        parentView.addView(marker, params);
+
+        params.setMargins(leftMargin, topMargin, 0, 0);
+        marker.setLayoutParams(params);
+        parentView.addView(marker);
     }
 
-    private void setCells(int subcell) {
+    private List<String> getCellList(int subcell) {
+        List<String> cells = new ArrayList<>();
+
         // corner cells
         if (subcell == 0) {
-            setCell(cell1, Integer.toString(subcell + 2), false);
-            setCell(cell2, Integer.toString(subcell + 12), false);
-            setCell(cell3, Integer.toString(subcell + 22), false);
-            setCell(cell4, Integer.toString(subcell + 1), false);
-            setCell(cell5, Integer.toString(subcell + 11), false);
-            setCell(cell6, Integer.toString(subcell + 21), false);
-            setCell(cell7, Integer.toString(subcell), true);
-            setCell(cell8, Integer.toString(subcell + 10), false);
-            setCell(cell9, Integer.toString(subcell + 20), false);
+            cells.add(0, Integer.toString(subcell + 2));
+            cells.add(1, Integer.toString(subcell + 12));
+            cells.add(2, Integer.toString(subcell + 22));
+            cells.add(3, Integer.toString(subcell + 1));
+            cells.add(4, Integer.toString(subcell + 11));
+            cells.add(5, Integer.toString(subcell + 21));
+            cells.add(6, Integer.toString(subcell));
+            cells.add(7, Integer.toString(subcell + 10));
+            cells.add(8, Integer.toString(subcell + 20));
         }
         else if (subcell == 9) {
-            setCell(cell1, Integer.toString(subcell), true);
-            setCell(cell2, Integer.toString(subcell + 10), false);
-            setCell(cell3, Integer.toString(subcell + 20), false);
-            setCell(cell4, Integer.toString(subcell - 1), false);
-            setCell(cell5, Integer.toString(subcell + 9), false);
-            setCell(cell6, Integer.toString(subcell + 19), false);
-            setCell(cell7, Integer.toString(subcell - 2), false);
-            setCell(cell8, Integer.toString(subcell + 8), false);
-            setCell(cell9, Integer.toString(subcell + 18), false);
+            cells.add(0, Integer.toString(subcell));
+            cells.add(1, Integer.toString(subcell + 10));
+            cells.add(2, Integer.toString(subcell + 20));
+            cells.add(3, Integer.toString(subcell - 1));
+            cells.add(4, Integer.toString(subcell + 9));
+            cells.add(5, Integer.toString(subcell + 19));
+            cells.add(6, Integer.toString(subcell - 2));
+            cells.add(7, Integer.toString(subcell + 8));
+            cells.add(8, Integer.toString(subcell + 18));
         }
         else if (subcell == 99) {
-            setCell(cell1, Integer.toString(subcell - 20), false);
-            setCell(cell2, Integer.toString(subcell - 10), false);
-            setCell(cell3, Integer.toString(subcell), true);
-            setCell(cell4, Integer.toString(subcell - 21), false);
-            setCell(cell5, Integer.toString(subcell - 11), false);
-            setCell(cell6, Integer.toString(subcell - 1), false);
-            setCell(cell7, Integer.toString(subcell - 22), false);
-            setCell(cell8, Integer.toString(subcell - 12), false);
-            setCell(cell9, Integer.toString(subcell - 2), false);
+            cells.add(0, Integer.toString(subcell - 20));
+            cells.add(1, Integer.toString(subcell - 10));
+            cells.add(2, Integer.toString(subcell));
+            cells.add(3, Integer.toString(subcell - 21));
+            cells.add(4, Integer.toString(subcell - 11));
+            cells.add(5, Integer.toString(subcell - 1));
+            cells.add(6, Integer.toString(subcell - 22));
+            cells.add(7, Integer.toString(subcell - 12));
+            cells.add(8, Integer.toString(subcell - 2));
         }
         else if (subcell == 90) {
-            setCell(cell1, Integer.toString(subcell - 18), false);
-            setCell(cell2, Integer.toString(subcell - 8), false);
-            setCell(cell3, Integer.toString(subcell + 2), false);
-            setCell(cell4, Integer.toString(subcell - 19), false);
-            setCell(cell5, Integer.toString(subcell - 9), false);
-            setCell(cell6, Integer.toString(subcell + 1), false);
-            setCell(cell7, Integer.toString(subcell - 20), false);
-            setCell(cell8, Integer.toString(subcell - 10), false);
-            setCell(cell9, Integer.toString(subcell), true);
+            cells.add(0, Integer.toString(subcell - 18));
+            cells.add(1, Integer.toString(subcell - 8));
+            cells.add(2, Integer.toString(subcell + 2));
+            cells.add(3, Integer.toString(subcell - 19));
+            cells.add(4, Integer.toString(subcell - 9));
+            cells.add(5, Integer.toString(subcell + 1));
+            cells.add(6, Integer.toString(subcell - 20));
+            cells.add(7, Integer.toString(subcell - 10));
+            cells.add(8, Integer.toString(subcell));
         }
         // left side
         else if (subcell < 10) {
-            setCell(cell1, Integer.toString(subcell + 1), false);
-            setCell(cell2, Integer.toString(subcell + 11), false);
-            setCell(cell3, Integer.toString(subcell + 21), false);
-            setCell(cell4, Integer.toString(subcell), true);
-            setCell(cell5, Integer.toString(subcell + 10), false);
-            setCell(cell6, Integer.toString(subcell + 20), false);
-            setCell(cell7, Integer.toString(subcell - 1), false);
-            setCell(cell8, Integer.toString(subcell + 9), false);
-            setCell(cell9, Integer.toString(subcell + 19), false);
+            cells.add(0, Integer.toString(subcell + 1));
+            cells.add(1, Integer.toString(subcell + 11));
+            cells.add(2, Integer.toString(subcell + 21));
+            cells.add(3, Integer.toString(subcell));
+            cells.add(4, Integer.toString(subcell + 10));
+            cells.add(5, Integer.toString(subcell + 20));
+            cells.add(6, Integer.toString(subcell - 1));
+            cells.add(7, Integer.toString(subcell + 9));
+            cells.add(8, Integer.toString(subcell + 19));
         }
         // top side
         else if ((subcell % 10) == 9) {
-            setCell(cell1, Integer.toString(subcell - 10), false);
-            setCell(cell2, Integer.toString(subcell), true);
-            setCell(cell3, Integer.toString(subcell + 10), false);
-            setCell(cell4, Integer.toString(subcell - 11), false);
-            setCell(cell5, Integer.toString(subcell - 1), false);
-            setCell(cell6, Integer.toString(subcell + 9), false);
-            setCell(cell7, Integer.toString(subcell - 12), false);
-            setCell(cell8, Integer.toString(subcell - 2), false);
-            setCell(cell9, Integer.toString(subcell + 8), false);
+            cells.add(0, Integer.toString(subcell - 10));
+            cells.add(1, Integer.toString(subcell));
+            cells.add(2, Integer.toString(subcell + 10));
+            cells.add(3, Integer.toString(subcell - 11));
+            cells.add(4, Integer.toString(subcell - 1));
+            cells.add(5, Integer.toString(subcell + 9));
+            cells.add(6, Integer.toString(subcell - 12));
+            cells.add(7, Integer.toString(subcell - 2));
+            cells.add(8, Integer.toString(subcell + 8));
         }
         // right side
         else if (subcell > 90) {
-            setCell(cell1, Integer.toString(subcell - 19), false);
-            setCell(cell2, Integer.toString(subcell - 9), false);
-            setCell(cell3, Integer.toString(subcell + 1), false);
-            setCell(cell4, Integer.toString(subcell - 20), false);
-            setCell(cell5, Integer.toString(subcell - 10), false);
-            setCell(cell6, Integer.toString(subcell), true);
-            setCell(cell7, Integer.toString(subcell - 21), false);
-            setCell(cell8, Integer.toString(subcell - 11), false);
-            setCell(cell9, Integer.toString(subcell - 1), false);
+            cells.add(0, Integer.toString(subcell - 19));
+            cells.add(1, Integer.toString(subcell - 9));
+            cells.add(2, Integer.toString(subcell + 1));
+            cells.add(3, Integer.toString(subcell - 20));
+            cells.add(4, Integer.toString(subcell - 10));
+            cells.add(5, Integer.toString(subcell));
+            cells.add(6, Integer.toString(subcell - 21));
+            cells.add(7, Integer.toString(subcell - 11));
+            cells.add(8, Integer.toString(subcell - 1));
         }
         // bottom side
         else if ((subcell % 10) == 0) {
-            setCell(cell1, Integer.toString(subcell - 8), false);
-            setCell(cell2, Integer.toString(subcell + 2), false);
-            setCell(cell3, Integer.toString(subcell + 12), false);
-            setCell(cell4, Integer.toString(subcell - 9), false);
-            setCell(cell5, Integer.toString(subcell + 1), false);
-            setCell(cell6, Integer.toString(subcell + 11), false);
-            setCell(cell7, Integer.toString(subcell - 10), false);
-            setCell(cell8, Integer.toString(subcell), true);
-            setCell(cell9, Integer.toString(subcell + 10), false);
+            cells.add(0, Integer.toString(subcell - 8));
+            cells.add(1, Integer.toString(subcell + 2));
+            cells.add(2, Integer.toString(subcell + 12));
+            cells.add(3, Integer.toString(subcell - 9));
+            cells.add(4, Integer.toString(subcell + 1));
+            cells.add(5, Integer.toString(subcell + 11));
+            cells.add(6, Integer.toString(subcell - 10));
+            cells.add(7, Integer.toString(subcell));
+            cells.add(8, Integer.toString(subcell + 10));
         }
         // middle cells
         else {
-            setCell(cell1, Integer.toString(subcell - 9), false);
-            setCell(cell2, Integer.toString(subcell + 1), false);
-            setCell(cell3, Integer.toString(subcell + 11), false);
-            setCell(cell4, Integer.toString(subcell - 10), false);
-            setCell(cell5, Integer.toString(subcell), true);
-            setCell(cell6, Integer.toString(subcell + 10), false);
-            setCell(cell7, Integer.toString(subcell - 11), false);
-            setCell(cell8, Integer.toString(subcell - 1), false);
-            setCell(cell9, Integer.toString(subcell + 9), false);
+            cells.add(0, Integer.toString(subcell - 9));
+            cells.add(1, Integer.toString(subcell + 1));
+            cells.add(2, Integer.toString(subcell + 11));
+            cells.add(3, Integer.toString(subcell - 10));
+            cells.add(4, Integer.toString(subcell));
+            cells.add(5, Integer.toString(subcell + 10));
+            cells.add(6, Integer.toString(subcell - 11));
+            cells.add(7, Integer.toString(subcell - 1));
+            cells.add(8, Integer.toString(subcell + 9));
         }
-    }
 
-    private void setCell(TextView cell, String value, boolean isCurrent) {
-        cell.setText(value);
-        if (isCurrent) {
-            cell.setBackgroundResource(R.drawable.center_bg);
-        }
-        else {
-            cell.setBackgroundDrawable(null);
-        }
+        return cells;
     }
 
     @Override

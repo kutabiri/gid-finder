@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="font_color">#99000000</color>
+    <color name="font_color">@android:color/white</color>
+    <color name="faded_font">#88ffffff</color>
+    <color name="marker_color">#f75b49</color>
+    <color name="status_bar_color">#3b9343</color>
+    <color name="primary_green">#50c65b</color>
+    <color name="faded_green">#883b9343</color>
 </resources>

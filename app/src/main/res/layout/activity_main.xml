@@ -1,22 +1,24 @@
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/parent_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:requiresFadingEdge="vertical"
-    android:fadingEdgeLength="30dp">
+    android:background="?attr/colorPrimary"
+    tools:context=".MainActivity">
 
-    <RelativeLayout
-        android:id="@+id/parent_view"
+    <LinearLayout
+        android:id="@+id/gid_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="@dimen/activity_horizontal_margin"
-        android:background="@android:color/white"
-        tools:context=".MainActivity">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
         <LinearLayout
-            android:id="@+id/gid_section"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
             android:orientation="vertical">
 
             <TextView
@@ -25,225 +27,288 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/font_color"
                 android:textStyle="bold"
-                android:textSize="35sp"
-                android:gravity="center"
+                android:textSize="24sp"
                 android:text="@string/initial_message" />
 
-            <TextView
-                android:id="@+id/latlon"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/font_color"
-                android:textStyle="bold"
-                android:textSize="35sp"
-                android:gravity="center"
-                android:visibility="gone"/>
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/faded_font"
+                    android:textSize="20sp"
+                    android:text="@string/lat"/>
+
+                <TextView
+                    android:id="@+id/latitude"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/font_color"
+                    android:textSize="20sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/faded_font"
+                    android:textSize="20sp"
+                    android:text="@string/lon"/>
+
+                <TextView
+                    android:id="@+id/longitude"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/font_color"
+                    android:textSize="20sp" />
+            </LinearLayout>
         </LinearLayout>
 
-        <!-- compass -->
-        <ImageView
-            android:id="@+id/map_section"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_marginTop="8dp"
-            android:src="@drawable/compass_bg"
-            android:layout_below="@id/gid_section"
-            android:scaleType="centerInside"/>
-
-        <ImageView
-            android:id="@+id/marker"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:src="@drawable/marker"
-            android:layout_alignTop="@id/map_section"
-            android:layout_alignLeft="@id/map_section"
-            android:visibility="gone"/>
-
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:layout_toRightOf="@id/map_section"
-            android:layout_alignTop="@id/map_section"
-            android:gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <ImageView
                 android:id="@+id/compass"
                 android:layout_width="75dp"
                 android:layout_height="75dp"
-                android:src="@drawable/compass"/>
+                android:padding="8dp"
+                android:background="@drawable/compass_bg"
+                android:src="@mipmap/ic_compass"/>
 
-            <Button
-                android:id="@+id/map_toggle"
+            <CheckBox
+                android:id="@+id/ping_toggle"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_marginTop="16dp"
-                android:text="@string/zoom_out"/>
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginLeft="-4dp"
+                android:layout_marginRight="-4dp"
+                android:text="@string/ping_on"
+                android:textSize="12sp"/>
         </LinearLayout>
 
+    </LinearLayout>
+
+    <GridView
+        android:id="@+id/map_section"
+        android:layout_width="@dimen/grid_height"
+        android:layout_height="@dimen/grid_height"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/gid_section"
+        android:horizontalSpacing="0dp"
+        android:verticalSpacing="0dp"
+        android:visibility="gone"/>
+
+    <include
+        android:id="@+id/small_grid"
+        layout="@layout/small_grid_item"
+        android:layout_width="@dimen/grid_height"
+        android:layout_height="@dimen/grid_height"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/gid_section"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true">
+
+        <Button
+            android:id="@+id/zoom_in_btn"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_marginBottom="@dimen/activity_horizontal_margin"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:background="@drawable/zoom_in_btn_selector"
+            android:enabled="false"/>
+
+        <Button
+            android:id="@+id/zoom_out_btn"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_marginBottom="@dimen/activity_horizontal_margin"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:background="@drawable/zoom_out_btn_selector"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+        <ImageView
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:src="@drawable/qed_logo"
+            android:layout_margin="10dp"
+            android:scaleType="fitEnd"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="200dp"
+        android:layout_marginTop="8dp"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@id/map_section"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="200dp"
-            android:layout_marginTop="8dp"
-            android:layout_alignParentBottom="true"
-            android:layout_below="@id/map_section"
-            android:orientation="horizontal">
+            android:layout_width="200dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/black"/>
 
             <LinearLayout
-                android:layout_width="200dp"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
 
                 <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
                     android:background="@android:color/black"/>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/black"/>
-
-                    <TextView
-                        android:id="@+id/cell_1"
-                        style="@style/cell_text"/>
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/black"/>
-
-                    <TextView
-                        android:id="@+id/cell_2"
-                        style="@style/cell_text"/>
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/black"/>
-
-                    <TextView
-                        android:id="@+id/cell_3"
-                        style="@style/cell_text"/>
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/black"/>
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/cell_1"
+                    style="@style/cell_text"/>
 
                 <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
                     android:background="@android:color/black"/>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/black"/>
-
-                    <TextView
-                        android:id="@+id/cell_4"
-                        style="@style/cell_text"/>
-
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/black"/>
-
-                    <TextView
-                        android:id="@+id/cell_5"
-                        style="@style/cell_text"/>
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/black"/>
-
-                    <TextView
-                        android:id="@+id/cell_6"
-                        style="@style/cell_text"/>
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/black"/>
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/cell_2"
+                    style="@style/cell_text"/>
 
                 <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
                     android:background="@android:color/black"/>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    android:layout_weight="1"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/black"/>
-
-                    <TextView
-                        android:id="@+id/cell_7"
-                        style="@style/cell_text"/>
-
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/black"/>
-
-                    <TextView
-                        android:id="@+id/cell_8"
-                        style="@style/cell_text"/>
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/black"/>
-
-                    <TextView
-                        android:id="@+id/cell_9"
-                        style="@style/cell_text"/>
-
-                    <View
-                        android:layout_width="1dp"
-                        android:layout_height="match_parent"
-                        android:background="@android:color/black"/>
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/cell_3"
+                    style="@style/cell_text"/>
 
                 <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
                     android:background="@android:color/black"/>
             </LinearLayout>
 
             <View
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_weight="1"/>
+                android:background="@android:color/black"/>
 
-            <ImageView
-                android:layout_width="50dp"
-                android:layout_height="wrap_content"
-                android:src="@drawable/qed_logo"
-                android:scaleType="fitEnd"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"/>
+
+                <TextView
+                    android:id="@+id/cell_4"
+                    style="@style/cell_text"/>
+
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"/>
+
+                <TextView
+                    android:id="@+id/cell_5"
+                    style="@style/cell_text"/>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"/>
+
+                <TextView
+                    android:id="@+id/cell_6"
+                    style="@style/cell_text"/>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/black"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"/>
+
+                <TextView
+                    android:id="@+id/cell_7"
+                    style="@style/cell_text"/>
+
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"/>
+
+                <TextView
+                    android:id="@+id/cell_8"
+                    style="@style/cell_text"/>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"/>
+
+                <TextView
+                    android:id="@+id/cell_9"
+                    style="@style/cell_text"/>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/black"/>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/black"/>
         </LinearLayout>
-    </RelativeLayout>
-</ScrollView>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1"/>
+
+    </LinearLayout>
+</RelativeLayout>

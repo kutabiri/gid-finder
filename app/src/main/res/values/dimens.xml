@@ -3,6 +3,8 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
-    <dimen name="subcell_per_unit_dp">2dp</dimen>
-    <dimen name="per_unit_dp">20dp</dimen>
+    <dimen name="grid_height">320dp</dimen>
+    <dimen name="medium_grid_size">106dp</dimen>
+    <dimen name="large_grid_size">32dp</dimen>
+    <dimen name="marker_width">20dp</dimen>
 </resources>
