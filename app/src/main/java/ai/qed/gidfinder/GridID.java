@@ -86,7 +86,7 @@ public class GridID {
     }
 
     private String formatCoordinate(boolean isNegative, int coordinate, String positive, String negative) {
-        String prefix = isNegative? negative : positive;
+        String prefix = isNegative ? negative : positive;
         int number = coordinate;
 
         return String.format("%s%d", prefix, number);
@@ -105,7 +105,7 @@ public class GridID {
     public String getLongString() {
         return Double.toString(longitude);
     }
-
+    
     public int getSubcell() {
         return index;
     }
