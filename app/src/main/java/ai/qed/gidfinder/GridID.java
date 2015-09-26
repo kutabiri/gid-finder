@@ -12,10 +12,8 @@ import org.osgeo.proj4j.ProjCoordinate;
  * Note that the cells are identified like this: 2W, 1W, 0W, 0E, 1E, 2E.
  */
 public class GridID {
-    private boolean eastingNegative;
-    private int easting;
-    private boolean northingNegative;
-    private int northing;
+    private int gidX;
+    private int gidY;
     private int index;
     private int xOffset;
     private int yOffset;
@@ -27,11 +25,9 @@ public class GridID {
     private static final String lambertProjectionString =
             "+proj=laea +ellps=WGS84 +lon_0=20 +lat_0=5 +units=m +no_defs";
 
-    public GridID(double latitude, double longitude, boolean eastingNegative, int easting, boolean northingNegative, int northing, int index, double x, double y) {
-        this.eastingNegative = eastingNegative;
-        this.easting = easting;
-        this.northingNegative = northingNegative;
-        this.northing = northing;
+    public GridID(double latitude, double longitude, int gidX, int gidY, int index, double x, double y) {
+        this.gidX = gidX;
+        this.gidY = gidY;
         this.index = index;
         this.xOffset = intfloor(x % 100);
         this.yOffset = intfloor(y % 100);
@@ -54,18 +50,15 @@ public class GridID {
 
     static public GridID fromLocation(Location location) {
         Location lambert = convertToLambert(location);
-        int easting = intfloor(Math.abs(lambert.getLongitude()) / 1000);
-        int northing = intfloor(Math.abs(lambert.getLatitude()) / 1000);
-
-        boolean eastingNegative = lambert.getLongitude() < 0;
-        boolean northingNegative = lambert.getLatitude() < 0;
+        int gidX = intfloor(lambert.getLongitude() / 1000);
+        int gidY = intfloor(lambert.getLatitude() / 1000);
 
         double x = floorMod(lambert.getLongitude(), 1000);
         double y = floorMod(lambert.getLatitude(), 1000);
 
         int cellID = calculateCellID(x, y);
 
-        return new GridID(location.getLatitude(), location.getLongitude(), eastingNegative, easting, northingNegative, northing, cellID, x, y);
+        return new GridID(location.getLatitude(), location.getLongitude(), gidX, gidY, cellID, x, y);
     }
 
     private static Location convertToLambert(Location location) {
@@ -93,9 +86,7 @@ public class GridID {
     }
 
     public String toGIDString() {
-        String eastingString = formatCoordinate(eastingNegative, easting, "E", "W");
-        String northingString = formatCoordinate(northingNegative, northing, "N", "S");
-        return String.format("GID\n%s-%s-%d", eastingString, northingString, index);
+        return String.format("GID\n%s, %s, %d", gidX, gidY, index);
     }
 
     public String getLatString() {
