@@ -105,7 +105,7 @@ public class GridID {
     public String getLongString() {
         return Double.toString(longitude);
     }
-    
+
     public int getSubcell() {
         return index;
     }
