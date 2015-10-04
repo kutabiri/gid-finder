@@ -79,7 +79,7 @@ public class GridID {
     }
 
     public String toGIDString() {
-        return String.format("GID\n%s, %s, %d", gidX, gidY, index);
+        return String.format("GID\n%s%s-%s%s-%d", gidX>=0 ? 'W' : 'E', Math.abs(gidX), gidY>=0 ? 'N' : 'S', Math.abs(gidY), index);
     }
 
     public String getLatString() {
