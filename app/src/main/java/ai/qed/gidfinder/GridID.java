@@ -78,13 +78,6 @@ public class GridID {
         return res;
     }
 
-    private String formatCoordinate(boolean isNegative, int coordinate, String positive, String negative) {
-        String prefix = isNegative ? negative : positive;
-        int number = coordinate;
-
-        return String.format("%s%d", prefix, number);
-    }
-
     public String toGIDString() {
         return String.format("GID\n%s, %s, %d", gidX, gidY, index);
     }
@@ -108,4 +101,13 @@ public class GridID {
     public int getYOffset() {
         return yOffset;
     }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
  }

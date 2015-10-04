@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Pair;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -26,6 +27,11 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import org.osmdroid.tileprovider.tilesource.ITileSource;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.BoundingBoxE6;
+import org.osmdroid.views.MapView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private View singleGrid;
     private int zoomLevel = 1;
     private Handler handler;
+    private MapView mapView;
 
     // record the compass picture angle turned
     private float currentDegree = 0f;
@@ -119,6 +126,17 @@ public class MainActivity extends AppCompatActivity {
         mapGrid = (GridView) findViewById(R.id.map_section);
         singleGrid = findViewById(R.id.small_grid);
 
+        singleGrid.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                return;
+            }
+        });
+
+        mapView = (MapView) findViewById(R.id.mapview);
+        final ITileSource tileSource = TileSourceFactory.getTileSource(TileSourceFactory.MAPNIK.name());
+        mapView.setTileSource(tileSource);
+
         boolean pingOn = preferences.getBoolean(getString(R.string.pref_key_sound), true);
 
         if (pingOn) {
@@ -169,8 +187,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         mLocationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                GridID gridID = GridID.fromLocation(location);
+            public void onLocationChanged(final Location location) {
+                final GridID gridID = GridID.fromLocation(location);
+
                 MainActivity.this.setLocationMessage(gridID);
             }
 
@@ -242,8 +261,85 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void setMapZoom(final Pair<Double, Double> centeredCoord) {
+        double latOffset;
+        double longOffset;
+
+        switch (zoomLevel) {
+            case 1:
+                // 111 kilometers / 1110 = 100 meters.
+                // 1 degree of latitude = ~111 kilometers.
+                // 1 / 1000 means an offset of coordinate by 111 meters.
+
+                latOffset = 1.0 / 1110.0 / 2;
+                break;
+            case 2:
+                latOffset = 1.0 / 1110.0 / 2 * 3;
+                break;
+            case 3:
+                // 111 kilometers / 111 = 1000 meters.
+                // 1 degree of latitude = ~111 kilometers.
+                // 1 / 1000 means an offset of coordinate by 111 meters.
+
+                latOffset = 1.0 / 111.0 / 2;
+                break;
+            default:
+                return;
+        }
+
+        // With longitude, things are a bit more complex.
+        // 1 degree of longitude = 111km only at equator (gradually shrinks to zero at the poles)
+        // So need to take into account latitude too, using cos(lat).
+
+        longOffset = latOffset * Math.cos((centeredCoord.first) * Math.PI / 180.0);
+
+        mapView.zoomToBoundingBox(new BoundingBoxE6(
+                (centeredCoord.first + latOffset),
+                (centeredCoord.second + longOffset),
+                (centeredCoord.first - latOffset),
+                (centeredCoord.second - longOffset)));
+
+//        new AsyncTask<Void, Void, Boolean>() {
+//            private KmlDocument kmlDocument;
+//
+//            @Override
+//            protected Boolean doInBackground(Void... params) {
+//                kmlDocument = new KmlDocument();
+//
+//                InputStream is;
+//                try {
+//                    is = getResources().openRawResource(R.raw.test);
+//                    boolean parsed = kmlDocument.parseKMLStream(is, null);
+//                    is.close();
+//
+//                    return parsed;
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//
+//                return false;
+//            }
+//
+//            @Override
+//            protected void onPostExecute(Boolean parsed) {
+//                if (parsed) {
+//                    Drawable defaultKmlMarker = getResources().getDrawable(R.drawable.marker_kml_point);
+//                    Bitmap bitmap = ((BitmapDrawable)defaultKmlMarker).getBitmap();
+//                    Style defaultStyle = new Style(bitmap, 0x901010AA, 3.0f, 0x20AA1010);
+//
+//                    FolderOverlay kmlOverlay = (FolderOverlay) kmlDocument.mKmlRoot.buildOverlay(mapView, defaultStyle, null, kmlDocument);
+//                    mapView.getOverlays().add(kmlOverlay);
+//                    mapView.invalidate();
+//                    mapView.zoomToBoundingBox(kmlDocument.mKmlRoot.getBoundingBox());
+//                }
+//            }
+//        }.execute();
+
+    }
+
     private void updateMapGrid() {
         if (zoomLevel == 1) {
+            mapView.setVisibility(View.GONE);
             mapGrid.setVisibility(View.GONE);
             singleGrid.setVisibility(View.VISIBLE);
             ((TextView) singleGrid.findViewById(R.id.cell_number)).setText(Integer.toString(currentGID.getSubcell()));
@@ -252,6 +348,7 @@ public class MainActivity extends AppCompatActivity {
             List<String> list;
             mapGrid.setVisibility(View.VISIBLE);
             singleGrid.setVisibility(View.GONE);
+            mapView.setVisibility(View.VISIBLE);
 
             if (zoomLevel == 3) {
                 mapGrid.setNumColumns(10);
@@ -263,6 +360,8 @@ public class MainActivity extends AppCompatActivity {
 
             mapGrid.setAdapter(new GridAdapter<>(this, list, zoomLevel, Integer.toString(currentGID.getSubcell())));
         }
+
+        setMapZoom(recenterMap());
 
         handler.postDelayed(new Runnable() {
             @Override
@@ -291,6 +390,63 @@ public class MainActivity extends AppCompatActivity {
         }
 
         updateMapGrid();
+    }
+
+    private Pair<Double, Double> recenterMap() {
+        double offset = 1.0 / 1110.0;
+        if (zoomLevel == 3) {
+            // have to figure out the center of the map from current gid
+
+            int latCoord = currentGID.getSubcell() % 10;
+            int longCoord = currentGID.getSubcell() / 10;
+
+            // shift latitude down if it's below middle
+            double latOffset = (4.5 - latCoord) * offset;
+
+            // shift longtiude to right if it's on the left side
+            double longOffset = (4.5 - longCoord) * offset * Math.cos((currentGID.getLatitude() + latOffset) * Math.PI / 180.0);
+
+            return new Pair<>(currentGID.getLatitude() + latOffset, currentGID.getLongitude() + longOffset);
+        }
+        else if (zoomLevel == 2) {
+            int subcell = currentGID.getSubcell();
+            // corner cells
+            if (subcell == 0) {
+                return new Pair<>(currentGID.getLatitude() + offset, currentGID.getLongitude() + offset * Math.cos((currentGID.getLatitude() + offset) * Math.PI / 180.0));
+            }
+            else if (subcell == 9) {
+                return new Pair<>(currentGID.getLatitude() - offset, currentGID.getLongitude() + offset * Math.cos((currentGID.getLatitude() - offset) * Math.PI / 180.0));
+            }
+            else if (subcell == 99) {
+                return new Pair<>(currentGID.getLatitude() - offset, currentGID.getLongitude() - offset * Math.cos((currentGID.getLatitude() - offset) * Math.PI / 180.0));
+            }
+            else if (subcell == 90) {
+                return new Pair<>(currentGID.getLatitude() + offset, currentGID.getLongitude() - offset * Math.cos((currentGID.getLatitude() - offset) * Math.PI / 180.0));
+            }
+            // left side
+            else if (subcell < 10) {
+                return new Pair<>(currentGID.getLatitude(), currentGID.getLongitude() + offset * Math.cos((currentGID.getLatitude()) * Math.PI / 180.0));
+            }
+            // top side
+            else if ((subcell % 10) == 9) {
+                return new Pair<>(currentGID.getLatitude() - offset, currentGID.getLongitude());
+            }
+            // right side
+            else if (subcell > 90) {
+                return new Pair<>(currentGID.getLatitude(), currentGID.getLongitude() - offset * Math.cos((currentGID.getLatitude()) * Math.PI / 180.0));
+            }
+            // bottom side
+            else if ((subcell % 10) == 0) {
+                return new Pair<>(currentGID.getLatitude() + offset, currentGID.getLongitude());
+            }
+            // middle cells
+            else {
+                return new Pair<>(currentGID.getLatitude(), currentGID.getLongitude());
+            }
+        }
+        else {
+            return new Pair<>(currentGID.getLatitude(), currentGID.getLongitude());
+        }
     }
 
     private void startTracking() {
@@ -367,12 +523,17 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            if (zoomLevel == 2) {
-                leftMargin = gridID.getXOffset() * view.getWidth() / 100 - (markerSize / 2) + view.getLeft() + mapGrid.getLeft();
-                topMargin = (100 - gridID.getYOffset()) * view.getHeight() / 100 - (markerSize / 2) + view.getTop() + mapGrid.getTop();
-            } else {
-                leftMargin = view.getWidth() / 2 - (markerSize / 2) + view.getLeft() + mapGrid.getLeft();
-                topMargin = view.getHeight() / 2 - (markerSize / 2) + view.getTop() + mapGrid.getTop();
+            if (view != null) {
+                if (zoomLevel == 2) {
+                    leftMargin = gridID.getXOffset() * view.getWidth() / 100 - (markerSize / 2) + view.getLeft() + mapGrid.getLeft();
+                    topMargin = (100 - gridID.getYOffset()) * view.getHeight() / 100 - (markerSize / 2) + view.getTop() + mapGrid.getTop();
+                } else {
+                    leftMargin = view.getWidth() / 2 - (markerSize / 2) + view.getLeft() + mapGrid.getLeft();
+                    topMargin = view.getHeight() / 2 - (markerSize / 2) + view.getTop() + mapGrid.getTop();
+                }
+            }
+            else {
+                return;
             }
         }
 

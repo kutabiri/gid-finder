@@ -6,4 +6,5 @@
     <color name="status_bar_color">#3b9343</color>
     <color name="primary_green">#50c65b</color>
     <color name="faded_green">#883b9343</color>
+    <color name="mask">#22000000</color>
 </resources>

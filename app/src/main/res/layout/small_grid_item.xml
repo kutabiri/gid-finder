@@ -11,5 +11,6 @@
         android:layout_height="@dimen/grid_height"
         android:textSize="24sp"
         android:textColor="@android:color/white"
+        android:background="@color/faded_green"
         android:gravity="center"/>
 </LinearLayout>

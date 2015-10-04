@@ -20,7 +20,9 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:23.0.1'
     compile 'org.osgeo:proj4j:0.1.0'
+    compile files('libs/osmdroid-android-4.3.jar')
+    compile files('libs/slf4j-android-1.6.1-RC1.jar')
+    compile files('libs/osmbonuspack_v5.1.jar')
 }

@@ -97,6 +97,14 @@
 
     </LinearLayout>
 
+    <org.osmdroid.views.MapView
+        android:id="@+id/mapview"
+        android:layout_width="@dimen/grid_height"
+        android:layout_height="@dimen/grid_height"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/gid_section"
+        />
+
     <GridView
         android:id="@+id/map_section"
         android:layout_width="@dimen/grid_height"
@@ -105,6 +113,8 @@
         android:layout_below="@id/gid_section"
         android:horizontalSpacing="0dp"
         android:verticalSpacing="0dp"
+        android:gravity="center"
+        android:background="@color/mask"
         android:visibility="gone"/>
 
     <include
