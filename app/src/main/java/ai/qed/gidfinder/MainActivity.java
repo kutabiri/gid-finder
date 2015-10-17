@@ -1,6 +1,10 @@
 package ai.qed.gidfinder;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -9,6 +13,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,11 +33,15 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import org.osmdroid.bonuspack.kml.KmlDocument;
+import org.osmdroid.bonuspack.kml.Style;
+import org.osmdroid.bonuspack.overlays.FolderOverlay;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.BoundingBoxE6;
 import org.osmdroid.views.MapView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,6 +85,8 @@ public class MainActivity extends AppCompatActivity {
 
     // The minimum time between updates in milliseconds
     private static final long MIN_TIME_BW_UPDATES = 0 * 1000 * 60 * 1; // 1 minute
+
+    private static final int PICKFILE_REQUEST_CODE = 0;
 
     private static final List<String> largeGridArray = new ArrayList<>();
 
@@ -254,6 +265,13 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        findViewById(R.id.load_file_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openFile();
+            }
+        });
+
         mLocationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
 
         // initialize your android device sensor capabilities
@@ -299,41 +317,6 @@ public class MainActivity extends AppCompatActivity {
                 (centeredCoord.first - latOffset),
                 (centeredCoord.second - longOffset)));
 
-//        new AsyncTask<Void, Void, Boolean>() {
-//            private KmlDocument kmlDocument;
-//
-//            @Override
-//            protected Boolean doInBackground(Void... params) {
-//                kmlDocument = new KmlDocument();
-//
-//                InputStream is;
-//                try {
-//                    is = getResources().openRawResource(R.raw.test);
-//                    boolean parsed = kmlDocument.parseKMLStream(is, null);
-//                    is.close();
-//
-//                    return parsed;
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//
-//                return false;
-//            }
-//
-//            @Override
-//            protected void onPostExecute(Boolean parsed) {
-//                if (parsed) {
-//                    Drawable defaultKmlMarker = getResources().getDrawable(R.drawable.marker_kml_point);
-//                    Bitmap bitmap = ((BitmapDrawable)defaultKmlMarker).getBitmap();
-//                    Style defaultStyle = new Style(bitmap, 0x901010AA, 3.0f, 0x20AA1010);
-//
-//                    FolderOverlay kmlOverlay = (FolderOverlay) kmlDocument.mKmlRoot.buildOverlay(mapView, defaultStyle, null, kmlDocument);
-//                    mapView.getOverlays().add(kmlOverlay);
-//                    mapView.invalidate();
-//                    mapView.zoomToBoundingBox(kmlDocument.mKmlRoot.getBoundingBox());
-//                }
-//            }
-//        }.execute();
 
     }
 
@@ -670,6 +653,48 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         stopTracking();
         super.onDestroy();
+    }
+
+    private void openFile() {
+        startActivityForResult(ListFileActivity.makeIntent(this, "storage"), PICKFILE_REQUEST_CODE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
+        switch (requestCode) {
+            case PICKFILE_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    new AsyncTask<Void, Void, Boolean>() {
+                        private KmlDocument kmlDocument;
+
+                        @Override
+                        protected Boolean doInBackground(Void... params) {
+                            kmlDocument = new KmlDocument();
+
+                            File file = new File(data.getStringExtra(ListFileActivity.EXTRA_RESULT));
+                            boolean parsed = kmlDocument.parseKMLFile(file);
+
+                            return parsed;
+
+                        }
+
+                        @Override
+                        protected void onPostExecute(Boolean parsed) {
+                            if (parsed) {
+                                Drawable defaultKmlMarker = getResources().getDrawable(R.drawable.marker_kml_point);
+                                Bitmap bitmap = ((BitmapDrawable)defaultKmlMarker).getBitmap();
+                                Style defaultStyle = new Style(bitmap, 0x901010AA, 3.0f, 0x20AA1010);
+
+                                FolderOverlay kmlOverlay = (FolderOverlay) kmlDocument.mKmlRoot.buildOverlay(mapView, defaultStyle, null, kmlDocument);
+                                mapView.getOverlays().add(kmlOverlay);
+                                mapView.invalidate();
+                                mapView.zoomToBoundingBox(kmlDocument.mKmlRoot.getBoundingBox());
+                            }
+                        }
+                    }.execute();
+                }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
 

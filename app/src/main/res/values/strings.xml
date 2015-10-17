@@ -8,4 +8,5 @@
     <string name="ping_off">Ping Off</string>
     <string name="lat">Lat</string>
     <string name="lon">Long</string>
+    <string name="load_file">Load File</string>
 </resources>
