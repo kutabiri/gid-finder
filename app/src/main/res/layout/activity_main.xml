@@ -92,7 +92,8 @@
                 android:layout_marginLeft="-4dp"
                 android:layout_marginRight="-4dp"
                 android:text="@string/ping_on"
-                android:textSize="12sp"/>
+                android:textColor="@android:color/white"
+                android:textSize="12dp"/>
         </LinearLayout>
 
     </LinearLayout>
@@ -165,7 +166,6 @@
             android:layout_width="75dp"
             android:layout_height="75dp"
             android:src="@drawable/qed_logo"
-            android:layout_margin="10dp"
             android:scaleType="fitEnd"/>
     </LinearLayout>
 

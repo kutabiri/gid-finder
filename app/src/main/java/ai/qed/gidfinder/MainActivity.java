@@ -688,7 +688,7 @@ public class MainActivity extends AppCompatActivity {
                                 FolderOverlay kmlOverlay = (FolderOverlay) kmlDocument.mKmlRoot.buildOverlay(mapView, defaultStyle, null, kmlDocument);
                                 mapView.getOverlays().add(kmlOverlay);
                                 mapView.invalidate();
-                                mapView.zoomToBoundingBox(kmlDocument.mKmlRoot.getBoundingBox());
+//                                mapView.zoomToBoundingBox(kmlDocument.mKmlRoot.getBoundingBox());
                             }
                         }
                     }.execute();

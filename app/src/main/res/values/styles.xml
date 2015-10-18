@@ -4,6 +4,7 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/primary_green</item>
+        <item name="colorAccent">@android:color/white</item>
     </style>
 
     <style name="cell_text">
