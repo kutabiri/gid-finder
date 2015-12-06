@@ -1,5 +1,6 @@
 package ai.qed.gidfinder;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -32,6 +33,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.osmdroid.bonuspack.kml.KmlDocument;
 import org.osmdroid.bonuspack.kml.Style;
@@ -277,6 +279,66 @@ public class MainActivity extends AppCompatActivity {
         // initialize your android device sensor capabilities
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
+        findViewById(R.id.location).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchCalc();
+            }
+        });
+    }
+
+    private void launchCalc() {
+        View view = getLayoutInflater().inflate(R.layout.dialog_calc, null);
+
+        final AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(view)
+                .setCancelable(false)
+                .create();
+
+        view.findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        final TextView lat = (TextView) view.findViewById(R.id.lat);
+        final TextView lon = (TextView) view.findViewById(R.id.lon);
+        final TextView gid = (TextView) view.findViewById(R.id.gid);
+
+        view.findViewById(R.id.to_gid).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                double latitude = 0;
+                double longitude = 0;
+                try {
+                    latitude = Double.parseDouble(lat.getText().toString());
+                    longitude = Double.parseDouble(lon.getText().toString());
+                }
+                catch (NumberFormatException e) {
+                    Toast.makeText(MainActivity.this, getString(R.string.latlon_validation_message), Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                GridID gridId = GridID.fromLatLong(latitude, longitude);
+                gid.setText(gridId.toGIDString());
+            }
+        });
+
+        view.findViewById(R.id.to_lat).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Location location = GridID.fromGID(gid.getText().toString());
+                    lat.setText(Double.toString(location.getLatitude()));
+                    lon.setText(Double.toString(location.getLongitude()));
+                }
+                catch (IllegalArgumentException e) {
+                    Toast.makeText(MainActivity.this, getString(R.string.gid_validation_message), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        dialog.show();
     }
 
     private void setMapZoom(final Pair<Double, Double> centeredCoord) {
@@ -463,13 +525,13 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
 
                 // only need to ping and update gid when it changed
-                if (gridId != null && (currentGID == null || !gridId.toGIDString().equals(currentGID.toGIDString()))) {
+                if (gridId != null && (currentGID == null || !gridId.toGIDHeaderString().equals(currentGID.toGIDHeaderString()))) {
 
                     if (preferences.getBoolean(getString(R.string.pref_key_sound), true)) {
                         pingSound.start();
                     }
 
-                    gidTextView.setText(gridId.toGIDString());
+                    gidTextView.setText(gridId.toGIDHeaderString());
 
                     if (zoomLevel == 1) {
                         ((TextView) singleGrid.findViewById(R.id.cell_number)).setText(Integer.toString(gridId.getSubcell()));

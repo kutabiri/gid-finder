@@ -9,4 +9,10 @@
     <string name="lat">Lat</string>
     <string name="lon">Long</string>
     <string name="load_file">Load File</string>
+    <string name="convert_to_gid">To GID</string>
+    <string name="convert_to_latlon">To Lat/Long</string>
+    <string name="cancel">Cancel</string>
+    <string name="convertion_calculator">Convertion Calculator</string>
+    <string name="latlon_validation_message">Please enter valid latitude and longitude and try again.</string>
+    <string name="gid_validation_message">Please enter valid GID and try again.</string>
 </resources>
