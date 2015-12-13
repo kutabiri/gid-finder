@@ -1,6 +1,7 @@
 package ai.qed.gidfinder;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
@@ -26,6 +27,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -321,6 +323,9 @@ public class MainActivity extends AppCompatActivity {
                 }
                 GridID gridId = GridID.fromLatLong(latitude, longitude);
                 gid.setText(gridId.toGIDString());
+
+                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(lat.getWindowToken(), 0);
             }
         });
 
@@ -328,9 +333,94 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
-                    Location location = GridID.fromGID(gid.getText().toString());
-                    lat.setText(Double.toString(location.getLatitude()));
-                    lon.setText(Double.toString(location.getLongitude()));
+                    Location location = GridID.fromGID(gid.getText().toString(), 500, 500);
+
+                    lat.setText(Double.toString(Math.round(location.getLatitude() * 1000000.00) / 1000000.00));
+                    lon.setText(Double.toString(Math.round(location.getLongitude() * 1000000.00) / 1000000.00));
+
+                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(gid.getWindowToken(), 0);
+
+                    final View view = getLayoutInflater().inflate(R.layout.dialog_to_latlon, null);
+
+                    final AlertDialog gridDialog = new AlertDialog.Builder(MainActivity.this)
+                            .setView(view)
+                            .setCancelable(false)
+                            .create();
+
+                    ((TextView) view.findViewById(R.id.lat_lon)).setText(getLatLon(location));
+
+                    view.findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            gridDialog.dismiss();
+                        }
+                    });
+
+                    view.findViewById(R.id.top_left_container).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            selectDot((ImageView) view.findViewById(R.id.top_left), view, getLatLon(GridID.fromGID(gid.getText().toString(), 0, 1000)));
+                        }
+                    });
+
+                    view.findViewById(R.id.top_center_container).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            selectDot((ImageView) view.findViewById(R.id.top_center), view, getLatLon(GridID.fromGID(gid.getText().toString(), 500, 1000)));
+                        }
+                    });
+
+                    view.findViewById(R.id.top_right_container).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            selectDot((ImageView) view.findViewById(R.id.top_right), view, getLatLon(GridID.fromGID(gid.getText().toString(), 1000, 1000)));
+                        }
+                    });
+
+                    view.findViewById(R.id.center_left_container).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            selectDot((ImageView) view.findViewById(R.id.center_left), view, getLatLon(GridID.fromGID(gid.getText().toString(), 0, 500)));
+                        }
+                    });
+
+                    view.findViewById(R.id.center_center_container).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            selectDot((ImageView) view.findViewById(R.id.center_center), view, getLatLon(GridID.fromGID(gid.getText().toString(), 500, 500)));
+                        }
+                    });
+
+                    view.findViewById(R.id.center_right_container).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            selectDot((ImageView) view.findViewById(R.id.center_right), view, getLatLon(GridID.fromGID(gid.getText().toString(), 1000, 500)));
+                        }
+                    });
+
+                    view.findViewById(R.id.bottom_left_container).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            selectDot((ImageView) view.findViewById(R.id.bottom_left), view, getLatLon(GridID.fromGID(gid.getText().toString(), 0, 0)));
+                        }
+                    });
+
+                    view.findViewById(R.id.bottom_center_container).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            selectDot((ImageView) view.findViewById(R.id.bottom_center), view, getLatLon(GridID.fromGID(gid.getText().toString(), 500, 0)));
+                        }
+                    });
+
+                    view.findViewById(R.id.bottom_right_container).setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            selectDot((ImageView) view.findViewById(R.id.bottom_right), view, getLatLon(GridID.fromGID(gid.getText().toString(), 1000, 0)));
+                        }
+                    });
+
+                    gridDialog.show();
                 }
                 catch (IllegalArgumentException e) {
                     Toast.makeText(MainActivity.this, getString(R.string.gid_validation_message), Toast.LENGTH_SHORT).show();
@@ -339,6 +429,25 @@ public class MainActivity extends AppCompatActivity {
         });
 
         dialog.show();
+    }
+
+    private String getLatLon(Location location) {
+        return getString(R.string.lat_lon, Double.toString(Math.round(location.getLatitude() * 1000000.00) / 1000000.00), Double.toString(Math.round(location.getLongitude() * 1000000.00) / 1000000.00));
+    }
+
+    private void selectDot(ImageView imageView, View container, String value) {
+        ((ImageView) container.findViewById(R.id.top_left)).setImageResource(R.drawable.circle);
+        ((ImageView) container.findViewById(R.id.top_center)).setImageResource(R.drawable.circle);
+        ((ImageView) container.findViewById(R.id.top_right)).setImageResource(R.drawable.circle);
+        ((ImageView) container.findViewById(R.id.center_left)).setImageResource(R.drawable.circle);
+        ((ImageView) container.findViewById(R.id.center_center)).setImageResource(R.drawable.circle);
+        ((ImageView) container.findViewById(R.id.center_right)).setImageResource(R.drawable.circle);
+        ((ImageView) container.findViewById(R.id.bottom_left)).setImageResource(R.drawable.circle);
+        ((ImageView) container.findViewById(R.id.bottom_center)).setImageResource(R.drawable.circle);
+        ((ImageView) container.findViewById(R.id.bottom_right)).setImageResource(R.drawable.circle);
+        imageView.setImageResource(R.drawable.green_circle);
+
+        ((TextView) container.findViewById(R.id.lat_lon)).setText(value);
     }
 
     private void setMapZoom(final Pair<Double, Double> centeredCoord) {

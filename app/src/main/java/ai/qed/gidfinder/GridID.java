@@ -74,37 +74,45 @@ public class GridID {
         return new GridID(lat, lon, gidX, gidY, cellID, x, y);
     }
 
-    public static Location fromGID(String gid) {
+    public static Location fromGID(String gid, int x, int y) {
         int gidX = 0;
         int gidY = 0;
         String[] parts = gid.split("-");
 
-        if (parts.length != 3) {
+        if (parts.length > 3 || parts.length < 2) {
             throw new IllegalArgumentException(gid + " not valid");
         }
 
-        if (parts[0].startsWith("W")) {
+        if (parts[0].toUpperCase().startsWith("W")) {
             gidX = Integer.parseInt(parts[0].substring(1));
         }
-        else if (parts[0].startsWith("E")) {
+        else if (parts[0].toUpperCase().startsWith("E")) {
             gidX = -Integer.parseInt(parts[0].substring(1));
         }
         else {
             throw new IllegalArgumentException(gid + " not valid");
         }
 
-        if (parts[1].startsWith("N")) {
+        if (parts[1].toUpperCase().startsWith("N")) {
             gidY = Integer.parseInt(parts[1].substring(1));
         }
-        else if (parts[1].startsWith("S")) {
+        else if (parts[1].toUpperCase().startsWith("S")) {
             gidY = -Integer.parseInt(parts[1].substring(1));
         }
         else {
             throw new IllegalArgumentException(gid + " not valid");
         }
 
-        int x = Integer.parseInt(parts[2]) / 100 / 10;
-        int y = Integer.parseInt(parts[2]) % 100;
+        if (parts.length > 2) {
+            x = Integer.parseInt(parts[2]) / 10 * 100 + x / 10;
+            if (parts[0].toUpperCase().startsWith("E")) {
+                x = -(1000-x);
+            }
+            y = Integer.parseInt(parts[2]) % 10 * 100 + y / 10;
+            if (parts[1].toUpperCase().startsWith("S")) {
+                y = -(1000-y);
+            }
+        }
 
         CoordinateTransformFactory ctFactory = new CoordinateTransformFactory();
         CRSFactory csFactory = new CRSFactory();

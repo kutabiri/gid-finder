@@ -12,8 +12,7 @@
         android:textColor="@android:color/white"
         android:textStyle="bold"
         android:textSize="24sp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="16dp"
         android:text="@string/convertion_calculator"/>
 
     <EditText
