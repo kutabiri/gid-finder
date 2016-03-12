@@ -128,46 +128,64 @@
         android:layout_below="@id/gid_section"/>
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true">
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="@dimen/activity_horizontal_margin">
+
+        <ImageView
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/qed_logo"
+            android:scaleType="centerInside"
+            android:layout_gravity="bottom"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
 
         <Button
             android:id="@+id/load_file_btn"
-            android:layout_width="75dp"
-            android:layout_height="75dp"
-            android:layout_marginBottom="@dimen/activity_horizontal_margin"
-            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
             android:background="@drawable/load_btn_selector"/>
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
 
         <Button
             android:id="@+id/zoom_in_btn"
-            android:layout_width="75dp"
-            android:layout_height="75dp"
-            android:layout_marginBottom="@dimen/activity_horizontal_margin"
-            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
             android:background="@drawable/zoom_in_btn_selector"
             android:enabled="false"/>
 
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
+
         <Button
             android:id="@+id/zoom_out_btn"
-            android:layout_width="75dp"
-            android:layout_height="75dp"
-            android:layout_marginBottom="@dimen/activity_horizontal_margin"
-            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
             android:background="@drawable/zoom_out_btn_selector"/>
-    </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true">
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
+
         <ImageView
-            android:layout_width="75dp"
-            android:layout_height="75dp"
-            android:src="@drawable/qed_logo"
-            android:scaleType="fitEnd"/>
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/afsis"
+            android:scaleType="centerInside"
+            android:layout_gravity="bottom"/>
     </LinearLayout>
 
     <LinearLayout
