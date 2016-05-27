@@ -1,4 +1,4 @@
-package ai.qed.gidfinder;
+package ai.qed.gridlocator;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -55,15 +55,6 @@ public class MainActivity extends AppCompatActivity {
     private TextView gidTextView;
     private TextView latTextView;
     private TextView longTextView;
-    private TextView cell1;
-    private TextView cell2;
-    private TextView cell3;
-    private TextView cell4;
-    private TextView cell5;
-    private TextView cell6;
-    private TextView cell7;
-    private TextView cell8;
-    private TextView cell9;
     private SensorManager mSensorManager;
     private SensorEventListener mSensorEventListener;
     private View marker;
@@ -125,15 +116,6 @@ public class MainActivity extends AppCompatActivity {
         gidTextView = (TextView) findViewById(R.id.coordinates);
         latTextView = (TextView) findViewById(R.id.latitude);
         longTextView = (TextView) findViewById(R.id.longitude);
-        cell1 = (TextView) findViewById(R.id.cell_1);
-        cell2 = (TextView) findViewById(R.id.cell_2);
-        cell3 = (TextView) findViewById(R.id.cell_3);
-        cell4 = (TextView) findViewById(R.id.cell_4);
-        cell5 = (TextView) findViewById(R.id.cell_5);
-        cell6 = (TextView) findViewById(R.id.cell_6);
-        cell7 = (TextView) findViewById(R.id.cell_7);
-        cell8 = (TextView) findViewById(R.id.cell_8);
-        cell9 = (TextView) findViewById(R.id.cell_9);
         marker = getLayoutInflater().inflate(R.layout.marker, null);
         parentView = (RelativeLayout) findViewById(R.id.parent_view);
         compass = (ImageView) findViewById(R.id.compass);
@@ -226,15 +208,6 @@ public class MainActivity extends AppCompatActivity {
                 latTextView.setText(null);
                 longTextView.setText(null);
                 parentView.removeView(marker);
-                cell1.setText(null);
-                cell2.setText(null);
-                cell3.setText(null);
-                cell4.setText(null);
-                cell5.setText(null);
-                cell6.setText(null);
-                cell7.setText(null);
-                cell8.setText(null);
-                cell9.setText(null);
             }
         };
 

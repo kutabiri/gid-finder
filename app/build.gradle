@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        applicationId "ai.qed.gidfinder"
+        applicationId "ai.qed.gridlocator"
         minSdkVersion 15
         targetSdkVersion 15
         versionCode 1

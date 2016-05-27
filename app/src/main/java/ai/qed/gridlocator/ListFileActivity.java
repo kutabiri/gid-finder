@@ -1,4 +1,4 @@
-package ai.qed.gidfinder;
+package ai.qed.gridlocator;
 
 import android.app.ListActivity;
 import android.content.Context;

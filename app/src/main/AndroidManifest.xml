@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ai.qed.gidfinder" >
+    package="ai.qed.gridlocator" >
 
     <application
         android:allowBackup="true"
@@ -8,7 +8,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".MainActivity"
+            android:name="ai.qed.gridlocator.MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -18,7 +18,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ListFileActivity"
+        <activity android:name="ai.qed.gridlocator.ListFileActivity"
             android:label="@string/load_file"
             android:screenOrientation="portrait"/>
     </application>
